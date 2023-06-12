@@ -1,16 +1,19 @@
 using System;
-using Build1.PostMVC.Unity.App.Modules.Async;
 using Build1.PostMVC.Unity.App.Modules.Logging;
-using Firebase;
 using Firebase.Auth;
 using LogLevel = Build1.PostMVC.Unity.App.Modules.Logging.LogLevel;
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+using Firebase;
+using Firebase.Extensions;
+#endif
 
 namespace Build1.PostMVC.Unity.Firebase.Impl
 {
     internal class FirebaseAdapter
     {
         private static readonly ILog Log = LogProvider.GetLog<FirebaseAdapter>(LogLevel.Warning);
-
+        
         public static bool Initialized { get; private set; }
 
         public static event Action OnInitialized;
@@ -26,19 +29,20 @@ namespace Build1.PostMVC.Unity.Firebase.Impl
             Log.Debug("Initializing...");
 
             #if UNITY_ANDROID && !UNITY_EDITOR
-            
+
             Log.Debug("Checking and fixing Android dependencies...");
 
-            FirebaseApp.CheckAndFixDependenciesAsync().Resolve(task =>
-            {
-                var dependencyStatus = task.Result;
-                if (dependencyStatus == DependencyStatus.Available)
-                    Log.Debug("Resolved.");
-                else
-                    Log.Error(ds => $"Could not resolve Firebase dependencies: {ds}", dependencyStatus);
+            FirebaseApp.CheckAndFixDependenciesAsync()
+                       .ContinueWithOnMainThread(task =>
+                        {
+                            var dependencyStatus = task.Result;
+                            if (dependencyStatus == DependencyStatus.Available)
+                                Log.Debug("Resolved.");
+                            else
+                                Log.Error(ds => $"Could not resolve Firebase dependencies: {ds}", dependencyStatus);
 
-                Complete();
-            });
+                            Complete();
+                        });
 
             #else
 
