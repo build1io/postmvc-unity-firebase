@@ -12,6 +12,9 @@ namespace Build1.PostMVC.Unity.Firebase.Editor
         [PostProcessBuild(999)]
         private static void OnPostProcessBuild(BuildTarget buildTarget, string buildPath)
         {
+            if (buildTarget != BuildTarget.iOS)
+                return;
+            
             var plist = new PlistDocument();
             var filePath = Path.Combine(buildPath, "Info.plist");
             plist.ReadFromFile(filePath);
