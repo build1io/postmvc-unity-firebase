@@ -1,7 +1,4 @@
 using System;
-using Build1.PostMVC.Unity.App.Modules.Logging;
-using Firebase.Auth;
-using LogLevel = Build1.PostMVC.Unity.App.Modules.Logging.LogLevel;
 
 #if UNITY_ANDROID && !UNITY_EDITOR
 using Firebase;
@@ -12,35 +9,23 @@ namespace Build1.PostMVC.Unity.Firebase.Impl
 {
     internal class FirebaseAdapter
     {
-        private static readonly ILog Log = LogProvider.GetLog<FirebaseAdapter>(LogLevel.Warning);
-        
-        public static bool Initialized { get; private set; }
+        public static bool Initialized  { get; private set; }
+        public static bool Initializing { get; private set; }
 
         public static event Action OnInitialized;
 
         public static void Initialize()
         {
             if (Initialized)
-            {
-                Log.Debug("Already initialized.");
                 return;
-            }
 
-            Log.Debug("Initializing...");
-
+            Initializing = true;
+            
             #if UNITY_ANDROID && !UNITY_EDITOR
-
-            Log.Debug("Checking and fixing Android dependencies...");
 
             FirebaseApp.CheckAndFixDependenciesAsync()
                        .ContinueWithOnMainThread(task =>
                         {
-                            var dependencyStatus = task.Result;
-                            if (dependencyStatus == DependencyStatus.Available)
-                                Log.Debug("Resolved.");
-                            else
-                                Log.Error(ds => $"Could not resolve Firebase dependencies: {ds}", dependencyStatus);
-
                             Complete();
                         });
 
@@ -53,20 +38,8 @@ namespace Build1.PostMVC.Unity.Firebase.Impl
 
         private static void Complete()
         {
-            try
-            {
-                //DON'T REMOVE. Firebase requires FirebaseAuth.DefaultInstance to be called before any get credential method invocation.
-                var auth = FirebaseAuth.DefaultInstance;
-            }
-            catch (Exception exception)
-            {
-                Log.Error(exception);
-                throw;
-            }
-
-            Log.Debug("Initialized");
-
             Initialized = true;
+            Initializing = false;
             OnInitialized?.Invoke();
         }
     }
