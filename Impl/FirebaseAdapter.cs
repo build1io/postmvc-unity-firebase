@@ -1,9 +1,6 @@
 using System;
-
-#if UNITY_ANDROID && !UNITY_EDITOR
 using Firebase;
 using Firebase.Extensions;
-#endif
 
 namespace Build1.PostMVC.Unity.Firebase.Impl
 {
@@ -21,19 +18,11 @@ namespace Build1.PostMVC.Unity.Firebase.Impl
 
             Initializing = true;
             
-            #if UNITY_ANDROID && !UNITY_EDITOR
-
             FirebaseApp.CheckAndFixDependenciesAsync()
-                       .ContinueWithOnMainThread(task =>
+                       .ContinueWithOnMainThread(_ =>
                         {
                             Complete();
                         });
-
-            #else
-
-            Complete();
-
-            #endif
         }
 
         private static void Complete()
